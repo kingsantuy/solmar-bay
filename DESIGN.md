@@ -393,6 +393,61 @@ runs at full speed, and shot mode is unaffected.
 No submission yet: the user must see and approve the new screenshots first;
 the parent agent submits only after that approval.
 
+### Polish and finish — 19 November 2026
+
+The user judged the 3D version not good enough against the leaderboard
+leaders, so it was polished with new game-dev skills and Blender, then
+finished across two VM restarts that killed two recordings (01a1f124 sealed,
+01a1f176 dead). The six changed source files were re-authored fresh in a
+third recorded session (01a1f189) from this design document and the polish
+and finish status files, never copied from the unwitnessed drafts.
+
+Polish changes: three.js r160 to r187 (vendored module plus core files, and
+the r187 glTF loader with its utils); every material became PBR standard
+with roughness and metalness; a sunset sky dome and a baked PMREM
+environment map at intensity 0.4; sun 2.6, hemisphere 0.7, fog far 2400;
+about 40 percent of windows glow warm orange at dusk; field-of-view kick
+from 62 degrees cruising to about 68 at top speed; trauma-squared
+summed-sine screen shake with a slight roll; drift dust at the rear wheels;
+instanced buildings (one mesh per wall colour plus one for roofs),
+containers, trees, lamps and props; nine landmark signs; street props
+(umbrellas, benches, bus-stop shelters, four billboards reading SOLMAR BAY,
+CASINO, CHOP SHOP and PORTSIDE); HUD fixes (title says seven jobs, brighter
+minimap roads, nine orange landmark dots, white player arrow over a dark
+outline, edge arrow with distance in metres); car handling tuned (sedan
+acceleration 420, grip 8; sport 560, 9.5). Five original 3D models were
+built in Blender (sportscar, sedan, police car, Grand Solmar Hotel, palm
+tree), exported as glTF, validated clean, and integrated with procedural
+fallbacks (sport uses the sportscar, sedan/taxi/classic the sedan, police
+the police car; truck and van keep procedural meshes; the hotel model sits
+at the nudged centre 2400, 1354). One measured deviation from the design:
+the models are built at about half game scale, so car clones are scaled
+times two and palms times three to match the world; unscaled, the cars
+would render half-size.
+
+Finish verification: a headless logic test, 63 of 63 checks pass; a full
+scripted browser playtest, 27 of 27 checks pass with zero console and zero
+page errors (walk, drive, steal, three-star police with helicopter, mission
+1 pickup and dropoff for $150, pistol combat, pause and resume, all four
+shot URLs reaching the ready flag); four new staged screenshots (1280 by
+800 JPEGs, 81–101 KiB each), read back as images. One cosmetic bug found
+by reading the new shots and fixed: the health bar rendered red at full
+health; it is now green above 50 percent, orange to 25, red below. Gate
+check on the final commit: dossier.json 670,330 bytes (limit 1.5 MiB),
+dossier text 158,609 bytes (limit 160 KiB — close, only about 5 KiB of
+headroom, so do not add source without re-checking), game/ 2,616,381 bytes
+in 27 entries (limit 48 MiB, 993 entries), index.html 652 bytes, no runtime
+network references in the game's own source (only documentation URLs inside
+the vendored three.js comments).
+
+Still not verified: missions 4–7 and the taxi loop were checked only by the
+logic test, not played end to end in the browser; sound was not listened
+to; headless SwiftShader runs at about 1.7 frames per second, so live play
+is in slow motion there (real desktop Chrome runs at full speed); lit
+windows vary per wall-colour and window variant, not uniquely per building;
+draw calls are 271 while driving, higher than the polish session's 216,
+mostly from per-car and prop meshes.
+
 ## 7. Judge criteria (from the kit)
 
 The AI judge compares two entries at a time from a contact sheet of the

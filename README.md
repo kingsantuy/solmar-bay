@@ -4,7 +4,7 @@
 [![rank](https://make.fun/badge/gta6-01/kingsantuy/solmar-bay/rank.svg)](https://make.fun/bounty/gta6-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
 [![reward](https://make.fun/badge/gta6-01/kingsantuy/solmar-bay/reward.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
 
-Solmar Bay is a sun-soaked coastal open-world crime game in the spirit of GTA 6, built as a 3D game with three.js (vendored under `game/vendor/`, no network) and a third-person chase camera, playing offline in a desktop browser. Drive and steal cars across a living 3D city, dodge a five-star wanted system with police cars and a helicopter, run seven story jobs for the local crew, and free-roam once the story is done. Everything is original — the city, the characters, the story, the art and the sound are all made for this game.
+Solmar Bay is a sun-soaked coastal open-world crime game in the spirit of GTA 6, built as a 3D game with three.js r187 (vendored under `game/vendor/`, no network) and a third-person chase camera, playing offline in a desktop browser. Drive and steal cars across a living 3D city, dodge a five-star wanted system with police cars and a helicopter, run seven story jobs for the local crew, and free-roam once the story is done. The look is PBR sunset lighting with a sky dome, glowing windows and shadows, and five original 3D models made in Blender (sportscar, sedan, police car, Grand Solmar Hotel, palm tree) loaded as glTF with procedural fallbacks. Everything is original — the city, the characters, the story, the art and the sound are all made for this game.
 
 ## Run it
 
