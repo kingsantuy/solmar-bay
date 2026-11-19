@@ -1,124 +1,144 @@
-// Staging the four screenshot scenes from a fresh game: reset the world,
-// place the player and the police and traffic where the scene needs them,
+// Staging the four screenshot scenes from a fresh game: place the player,
+// police and traffic where the scene needs them, set wanted / mission state,
 // then simulate a fixed number of steps with scripted inputs so the frame
-// shows the game mid-action. Same seed, same frame.
-import { CONFIG } from './config.js';
-import { makeCar } from './vehicles.js';
-import { startMission } from './missions.js';
-import { range } from './rng.js';
+// shows the game mid-action (a chase already running, a drive already
+// moving, a mission already under way). Same seed, same frame.
+// Only the state shape from state.js is used — cars are plain literals.
+// Mission defs come from the logic layer's config (7 story jobs) so the
+// staged scenes always match the real game.
+import { MISSIONS } from './config.js';
+import { stepGame } from './state.js';
 
-export const SHOT_DEFS = [
-  { name: 'cover', steps: 60, keys: ['KeyW'], label: 'Three-star police chase' },
-  { name: 'drive', steps: 75, keys: ['KeyW'], label: 'Driving down the coastal avenue' },
-  { name: 'onfoot', steps: 45, keys: ['KeyW'], label: 'On foot downtown' },
-  { name: 'mission', steps: 40, keys: [], label: 'A mission in progress' },
+export const SHOTS = [
+  { name: 'cover', url: '?shot=cover&seed=1' },
+  { name: 'drive', url: '?shot=drive&seed=1' },
+  { name: 'onfoot', url: '?shot=onfoot&seed=1' },
+  { name: 'mission', url: '?shot=mission&seed=1' },
 ];
 
-// A minimal stand-in for Input, with scripted held keys.
-export function scriptedInput(heldCodes) {
-  const held = new Set(heldCodes);
+export const SHOT_DEFS = [
+  { name: 'cover', steps: 90, keys: ['up'] },
+  { name: 'drive', steps: 90, keys: ['up'] },
+  { name: 'onfoot', steps: 45, keys: ['up'] },
+  { name: 'mission', steps: 40, keys: ['up'] },
+];
+
+function startMissionAt(game, index, step = 0) {
+  const def = MISSIONS[index];
+  game.mission = { index, def, step, timer: def.timeLimit || null, active: true };
+}
+
+let carSeq = 0;
+function makeShotCar(model, x, y, angle, kind, color, speed = 0) {
   return {
-    keys: held,
-    pressed: new Set(),
-    mouse: { x: 640, y: 400, down: false, clicked: false },
-    isDown: (c) => held.has(c),
-    wasPressed: () => false,
-    anyDown: (codes) => codes.some((c) => held.has(c)),
-    endFrame() {},
+    id: 'shot-' + (carSeq++) + '-' + model,
+    model, x, y, angle, speed,
+    color: color || '#c94f4f',
+    kind, health: 100, owned: kind === 'player', siren: kind === 'police',
+    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
   };
 }
 
-function putPlayerInCar(state, car) {
-  car.kind = 'player';
-  car.owned = true;
-  car.vx = 0;
-  car.vy = 0;
-  car.speed = 0;
-  state.player.inCar = car;
-  state.player.x = car.x;
-  state.player.y = car.y;
-  state.player.angle = car.angle;
-  state.camera.x = car.x;
-  state.camera.y = car.y;
+function putPlayerInCar(game, car) {
+  game.cars.push(car);
+  const p = game.player;
+  p.car = car;
+  p.onFoot = false;
+  p.x = car.x;
+  p.y = car.y;
+  p.angle = car.angle;
+  p.speed = car.speed;
+  p.moving = true;
 }
 
-function placePolice(state, x, y, angle) {
-  const car = makeCar('police', x, y, angle, 'police');
-  car.speed = 300;
-  car.vx = Math.cos(angle) * 300;
-  car.vy = Math.sin(angle) * 300;
-  state.cars.push(car);
-  return car;
+function clearTrafficCorridor(game, x0, x1, y0, y1) {
+  game.cars = (game.cars || []).filter(
+    (c) => !(c.kind === 'traffic' && c.x > x0 && c.x < x1 && c.y > y0 && c.y < y1),
+  );
 }
 
-export function stageShot(state, name) {
-  state.screen = 'play';
-  state.screenT = 0;
-  state.audio.ensure = () => {};
+function scriptedInput(held) {
+  return {
+    up: !!held.up, down: false, left: false, right: false,
+    run: false, enter: false, handbrake: false, punch: false,
+    shoot: false, aimX: 0, aimY: 0, weapon1: false, weapon2: false,
+    pause: false, mute: false, confirm: false, radio: false,
+  };
+}
+
+export function stageShot(game, name) {
+  game.screen = 'play';
+  if (game.camera) game.camera.shake = 0;
+  const steps = (SHOT_DEFS.find((s) => s.name === name) || { steps: 60 }).steps;
+  const input = scriptedInput({ up: true });
+
   if (name === 'cover') {
-    // A three-star chase: the player in a sportscar on the downtown road,
-    // three patrol cars closing in, the first job on the HUD. The car
-    // drives in the eastbound lane (28 px below the centre line) and the
-    // corridor ahead is cleared of traffic, so the chase reads instead of
-    // a pile-up.
-    const car = makeCar('sport', 1800, 2128, 0, 'parked', '#e5322d');
-    state.cars.push(car);
-    putPlayerInCar(state, car);
-    car.vx = 420;
-    car.speed = 420;
-    state.cars = state.cars.filter(
-      (c) => !(c.kind === 'traffic' && c.x > 1700 && c.x < 2900 && c.y > 2000 && c.y < 2250),
-    );
-    state.player.wanted = 3;
-    state.player.lastCrimeAt = state.time;
-    placePolice(state, 1520, 2100, 0);
-    placePolice(state, 1440, 2128, 0);
-    placePolice(state, 1580, 2072, 0);
-    startMission(state, 0);
-    return;
-  }
-  if (name === 'drive') {
-    // Down the coastal avenue: sea and sand on the left, the city on the
-    // right, traffic ahead. The car drives in the southbound lane (28 px
-    // left of the centre line) and the corridor ahead is cleared of
-    // traffic, so the run stays clean.
-    const car = makeCar('sedan', 392, 1400, Math.PI / 2, 'parked', '#4f7dc9');
-    state.cars.push(car);
-    putPlayerInCar(state, car);
-    car.vy = 350;
-    car.speed = 350;
-    state.cars = state.cars.filter(
-      (c) => !(c.kind === 'traffic' && c.x > 330 && c.x < 470 && c.y > 1300 && c.y < 2300),
-    );
-    startMission(state, 0);
-    return;
-  }
-  if (name === 'onfoot') {
-    // On foot downtown, among pedestrians and traffic.
-    state.player.x = 2100;
-    state.player.y = 1560;
-    state.player.angle = -Math.PI / 2;
-    state.camera.x = 2100;
-    state.camera.y = 1560;
-    for (let i = 0; i < 6 && i < state.peds.length; i++) {
-      const ped = state.peds[i];
-      ped.x = 2100 + range(state.rng, -160, 160);
-      ped.y = 1560 + range(state.rng, -120, 120);
+    // Three-star chase: player in a red sportscar on the downtown road,
+    // three patrol cars closing in, helicopter overhead, first job on the
+    // HUD. Drives in the eastbound lane (28 below the centre line) with
+    // the corridor ahead cleared of traffic, so the chase reads.
+    const car = makeShotCar('sport', 1800, 2128, 0, 'player', '#e5322d', 420);
+    putPlayerInCar(game, car);
+    clearTrafficCorridor(game, 1700, 2900, 2000, 2250);
+    if (game.wanted) {
+      game.wanted.stars = 3;
+      game.wanted.quietTimer = 0;
+      game.wanted.decayTimer = 0;
     }
-    startMission(state, 0);
-    return;
+    game.cars.push(makeShotCar('police', 2950, 2128, 0, 'police', '#20242c', 300));
+    game.cars.push(makeShotCar('police', 3100, 2100, 0, 'police', '#20242c', 300));
+    game.cars.push(makeShotCar('police', 2300, 2128, 0, 'police', '#20242c', 300));
+    if (game.heli) Object.assign(game.heli, { active: true, x: 3200, y: 2000, z: 120, angle: 0, rotor: 0 });
+    game.message = 'Lose the cops!';
+    game.messageTimer = 6;
+    startMissionAt(game, 0, 0);
+  } else if (name === 'drive') {
+    // Down the coastal avenue, northbound so the sea stays on the left:
+    // sedan at ~77 km/h in the northbound lane (28 right of centre).
+    const car = makeShotCar('sedan', 448, 2000, -Math.PI / 2, 'player', '#4f7dc9', 420);
+    putPlayerInCar(game, car);
+    clearTrafficCorridor(game, 330, 470, 1200, 2100);
+    startMissionAt(game, 0, 0);
+  } else if (name === 'onfoot') {
+    // On foot downtown, among pedestrians and traffic, facing the
+    // Grand Solmar Hotel to the east.
+    const p = game.player;
+    p.onFoot = true;
+    p.car = null;
+    p.x = 2100;
+    p.y = 1610; // south sidewalk of the downtown road, facing the hotel
+    p.angle = 0;
+    p.moving = true;
+    p.speed = 0;
+    const peds = game.peds || [];
+    for (let i = 0; i < 6 && i < peds.length; i++) {
+      peds[i].x = 2100 + ((i * 67) % 320) - 160;
+      peds[i].y = 1610 + ((i * 113) % 80) - 40;
+      peds[i].state = 'walk';
+    }
+    startMissionAt(game, 0, 0);
+  } else if (name === 'mission') {
+    // Hot Wheels, delivery step: the red sportscar racing east toward the
+    // Chop Shop, the waypoint ring waiting ahead.
+    const car = makeShotCar('sport', 3300, 1568, 0, 'player', '#e5322d', 380);
+    putPlayerInCar(game, car);
+    clearTrafficCorridor(game, 3200, 4000, 1450, 1650);
+    startMissionAt(game, 1, 1);
+  } else {
+    throw new Error('unknown shot: ' + name);
   }
-  if (name === 'mission') {
-    // Hot Wheels: on foot at the beach lot, the red sportscar waiting, the
-    // waypoint diamond on it.
-    state.player.x = 560;
-    state.player.y = 2100;
-    state.player.angle = 0;
-    state.camera.x = 560;
-    state.camera.y = 2100;
-    startMission(state, 1);
-    return;
+
+  // Simulate so the frame shows the game mid-action and the chase camera
+  // has settled behind the player.
+  for (let i = 0; i < steps; i++) {
+    stepGame(game, scriptedInput({ up: true }), 1 / 60);
   }
-  // Unknown scene: just play.
-  startMission(state, 0);
+  if (game.camera) game.camera.shake = 0;
+  if (name === 'cover' && game.heli && game.heli.active) {
+    // The heli chases the player and would end up behind the chase camera;
+    // pull it ahead of the player for the frame so the chase reads.
+    game.heli.x = game.player.x + 380;
+    game.heli.y = game.player.y - 160;
+    game.heli.z = 120;
+  }
 }
