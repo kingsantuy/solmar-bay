@@ -1,54 +1,47 @@
-// Solmar Bay — save / load. localStorage key 'solmar-bay-save-v1'.
-// A missing or broken save is a fresh start, never a crash. In a
-// non-browser environment (headless logic tests) localStorage does not
-// exist, so an in-memory fallback keeps the same API working there.
-
 const KEY = 'solmar-bay-save-v1';
-let memFallback = null;
-
-function storage() {
+let mem = null;
+function store() {
   try {
     if (typeof localStorage !== 'undefined' && localStorage) return localStorage;
-  } catch (e) { /* private mode / unavailable */ }
+  } catch (e) { /* fall through to memory */ }
   return null;
 }
-
-export function loadSave() {
-  const s = storage();
-  try {
-    if (s) {
-      const raw = s.getItem(KEY);
-      if (!raw) return null;
-      const data = JSON.parse(raw);
-      if (!data || typeof data !== 'object') return null;
-      return data;
-    }
-  } catch (e) {
-    return null;
-  }
-  return memFallback ? JSON.parse(JSON.stringify(memFallback)) : null;
-}
-
 export function saveGame(game) {
+  const p = game.player;
   const data = {
-    money: game.player.money,
-    completed: [...(game.completedMissions || [])],
+    money: p.money,
+    completed: game.completedMissions.slice(),
     stats: { ...game.stats },
-    player: { x: Math.round(game.player.x), y: Math.round(game.player.y) },
+    respect: game.respect.pts,
+    weapons: { owned: game.weapons.list.filter((w) => w.owned).map((w) => w.id), cur: game.weapons.cur },
+    garage: { ...game.garage },
+    pos: { x: Math.round(p.x), y: Math.round(p.y) },
+    missionIndex: game.missionIndex,
   };
-  const s = storage();
   try {
-    if (s) {
-      s.setItem(KEY, JSON.stringify(data));
-      return true;
-    }
-  } catch (e) { /* quota / private mode — fall through to memory */ }
-  memFallback = data;
-  return true;
+    const s = store();
+    if (s) s.setItem(KEY, JSON.stringify(data));
+    else mem = JSON.stringify(data);
+  } catch (e) { /* a broken save never crashes the game */ }
+  return data;
 }
-
+export function loadSave() {
+  let raw = null;
+  try {
+    const s = store();
+    raw = s ? s.getItem(KEY) : mem;
+  } catch (e) { return null; }
+  if (!raw) return null;
+  try {
+    const d = JSON.parse(raw);
+    if (typeof d.money !== 'number' || !Array.isArray(d.completed)) return null;
+    return d;
+  } catch (e) { return null; }
+}
 export function clearSave() {
-  const s = storage();
-  try { if (s) s.removeItem(KEY); } catch (e) { /* ignore */ }
-  memFallback = null;
+  try {
+    const s = store();
+    if (s) s.removeItem(KEY);
+    else mem = null;
+  } catch (e) { /* ignore */ }
 }

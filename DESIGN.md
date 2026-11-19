@@ -448,6 +448,86 @@ windows vary per wall-colour and window variant, not uniquely per building;
 draw calls are 271 while driving, higher than the polish session's 216,
 mostly from per-car and prop meshes.
 
+### Rebuild v2 — 19 November 2026
+
+The user sent a screenshot of a new leaderboard entry, GOLDEN HOUR KINGS
+(Puerto Celeste: 8 story missions, 5-star PCPD dispatch, helicopter and
+roadblocks, weapon wheel, carjacking, garage upgrades, respect, saves,
+radio) and asked whether Solmar Bay could look like that. It could, so the
+game was rebuilt toward that look and those systems, keeping the Solmar Bay
+name and identity (not the other entrant's city name or text). The rebuild
+ran in a fourth recorded session (01a1f309, sealed), by three parallel
+workers (look, systems/HUD) under the coordinator, and was finished in a
+fifth recorded session (01a1f33e) that fixed the one open issue below.
+
+Rebuild changes: golden-hour lighting; a denser city; five new Blender
+models (tall apartment with balconies 149,236 B, mid apartment 50,732 B,
+fuller palm 44,396 B, police helicopter 38,012 B, yellow taxi van 20,760 B;
+303,136 B total, 10 models in all); weapon wheel with five weapons (fists,
+pistol, SMG $800, shotgun $1,500, rifle $3,000, locked until respect 400);
+respect (0 at start, +100 per mission, +15 per fare, level = points / 200);
+garage at the Chop Shop (Repair $100, Respray $250, Engine $800 per level
+up to 2, Armour $1,200 per level up to 2); dispatch panel (callsigns
+GULL-11, CORAL-25, REEF-18, TAC-45, AIR-1; statuses RAMMING / FIRING /
+SPOTLIGHT / ROADBLOCK / PATROL); dialogue with CSS portraits (crew: Mara
+the boss, Diz the wheelman, Rook the player); vehicle condition bar and
+radio now-playing in the HUD; five-star wanted with roadblocks (up to 2 at
+4–5 stars); mission 8 "Golden Hour" ($2,000: meet the crew at Marina
+Casino, survive a scripted 5-star manhunt until wanted returns to 0,
+deliver to the Hideout); mission stage tracker (stage fraction, next-step
+label, IN SIGHT indicator by distance rule, not raycasting).
+
+The one must-fix issue, found after the rebuild: the player car was NOT
+visible in the driving screenshots — empty road where the car should be,
+though the speed readout said the player was driving. A probe had reported
+the car projecting to screen (640, 470) and marked it visible, but crops of
+the disk screenshots at that exact region showed empty road. The cause:
+`buildCity` in `game/src/render3d.js` ran `loadAll().then(() => {
+applyModels(); window.__solmarModelsReady = true; ... })`, and
+`applyModels()` clears ALL car meshes from `carMeshes` and the scene. When
+the GLB models finish loading asynchronously — after the shot-mode syncs in
+main.js — that callback fires, the car meshes are cleared, and nothing
+recreates them, because shot mode has no frame loop (no more `sync` calls).
+Live play was unaffected (the frame loop re-syncs every frame); the
+helicopter mesh was cleared the same way. The fix is one line in the same
+callback: call `sync(game, 1 / 60)` after `applyModels()` instead of only
+rendering — `sync` calls `applyModels()` at its top, then the car loop
+recreates the car meshes, then it renders. Robust across all GLB-load
+timings. Verified in pixels: the re-taken cover shows the red sportscar at
+centre with the helicopter in the distance and police ahead; drive shows
+the blue sedan; mission shows the red sportscar under the waypoint beam.
+
+Also added in the finish session: a held gun mesh. No gun mesh existed in
+the renderer at all before. It is one small procedural group (body, barrel,
+grip, gunmetal, long axis on local +X — the same forward axis bullets use),
+shown only when the player is on foot with a gun equipped, positioned at
+the player's right hand with the walk bob, and scaled per weapon (pistol
+1, SMG 1.3, shotgun 1.55, rifle 1.85). The on-foot screenshot stages the
+pistol so the gun shows in the frame.
+
+Finish verification: headless logic test 121 of 121 pass; full scripted
+browser playtest 43 of 43 pass with zero console and zero page errors
+(walk, drive, steal, wanted with helicopter and roadblocks, missions
+including the 8th, weapon switch, garage purchase, respect gain,
+pause/resume, save/load, all four shot URLs reaching the ready flag); four
+new staged screenshots (1280 by 800 JPEGs, 111–139 KiB each), read back as
+images. Gate check on the final state: dossier.json 809,878 bytes (limit
+1.5 MiB), dossier text 148,431 bytes (limit 160 KiB — 15,409 bytes of
+headroom), game/ 2,909,343 bytes in 31 entries (limit 48 MiB, 993
+entries), index.html 652 bytes, no runtime network references in game/.
+
+Still not verified: missions 3–7 and the taxi fare loop were checked only
+by the logic test, not played end to end in the browser (missions 1, 2 and
+8 were browser-played); sound was not listened to; headless SwiftShader
+runs at about 0.7–1.7 frames per second, so live play is in slow motion
+there (real desktop Chrome runs at full speed); IN SIGHT is a distance
+rule, not line-of-sight raycasting; dialogue portraits are CSS circles with
+initials, not drawn faces; lit windows vary per wall-colour and window
+variant, not uniquely per building.
+
+No submission yet: the user must see and approve the new screenshots first;
+the parent agent submits only after that approval.
+
 ## 7. Judge criteria (from the kit)
 
 The AI judge compares two entries at a time from a contact sheet of the

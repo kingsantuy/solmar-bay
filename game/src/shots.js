@@ -110,6 +110,9 @@ export function stageShot(game, name) {
     p.angle = 0;
     p.moving = true;
     p.speed = 0;
+    // Pistol equipped so the held gun mesh shows in the frame.
+    const pw = game.weapons.list.find((w) => w.id === 'pistol');
+    if (pw) { pw.owned = true; game.weapons.cur = game.weapons.list.indexOf(pw); p.weapon = 'pistol'; p.hasPistol = true; }
     const peds = game.peds || [];
     for (let i = 0; i < 6 && i < peds.length; i++) {
       peds[i].x = 2100 + ((i * 67) % 320) - 160;
