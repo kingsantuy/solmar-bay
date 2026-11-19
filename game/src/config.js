@@ -1,85 +1,12 @@
-export const CONFIG = {
-  world: { w: 4800, h: 3600 },
-  roadsV: [420, 980, 1540, 2100, 2660, 3220, 3780, 4340],
-  roadsH: [420, 980, 1540, 2100, 2660, 3220],
-  roadW: 116, sidewalk: 26, roadMargin: 16,
-  wallColors: ['#c96a4a', '#8a6d8b', '#4f8a8b', '#c9a24a', '#7a4a6e', '#a34a3a', '#7a7a4a', '#d8b48f', '#5a7a9e', '#9e6a4a', '#6a8a5a'],
-  walkSpeed: 175, runSpeed: 265, playerRadius: 14,
-  punchDmg: 12, punchRate: 0.38, punchReach: 40,
-  playerHealth: 100, regenRate: 4, regenDelay: 8,
-  bulletSpeed: 640, policeBulletSpeed: 500, policeBulletDmg: 9,
-  maxStars: 5, quietTime: 20, decayEvery: 14, bustHold: 1.6, respawnCost: 100,
-  trafficCount: 16, parkedCount: 9, pedCount: 26, maxPolice: 5,
-  policeSpawnEvery: 2.5, policeSpawnMin: 650, policeSpawnMax: 850, policeDespawn: 1100,
-  heliFromStars: 3, policeShootRange: 520, copShootRange: 320, policeShotEvery: 1.1,
-  taxiMin: 30, taxiMax: 45, fareMin: 25, fareMax: 70,
-  paintColors: ['#e5322d', '#4f7dc9', '#f2c200', '#2a7a5a', '#e67e22', '#8e44ad', '#e8e8e8', '#20242c'],
-};
-export const CAR_MODELS = {
-  sedan: { topSpeed: 430, accel: 420, grip: 8, len: 96, wid: 48 },
-  taxi: { topSpeed: 410, accel: 400, grip: 8, len: 96, wid: 48 },
-  sport: { topSpeed: 560, accel: 560, grip: 9.5, len: 100, wid: 50 },
-  truck: { topSpeed: 330, accel: 300, grip: 7, len: 130, wid: 54 },
-  van: { topSpeed: 380, accel: 340, grip: 7, len: 110, wid: 52 },
-  police: { topSpeed: 500, accel: 480, grip: 8.5, len: 100, wid: 50 },
-  classic: { topSpeed: 400, accel: 380, grip: 7.5, len: 96, wid: 48 },
-};
-export const LANDMARKS = {
-  hotel: { x: 2400, y: 1500, name: 'Grand Solmar Hotel' },
-  casino: { x: 2100, y: 3050, name: 'Marina Casino' },
-  chopshop: { x: 3900, y: 1500, name: 'Chop Shop' },
-  hospital: { x: 2660, y: 980, name: 'Solmar General' },
-  policehq: { x: 2100, y: 2100, name: 'Police HQ' },
-  hideout: { x: 4350, y: 300, name: 'Hideout' },
-  lighthouse: { x: 600, y: 350, name: 'Lighthouse' },
-  pier: { x: 2350, y: 3350, name: 'Marina Pier' },
-  docks: { x: 3900, y: 3350, name: 'Portside Docks' },
-};
-export const WEAPONS = [
-  { id: 'fists', name: 'Fists', dmg: 12, rate: 0.38, price: 0, owned: true, reqRespect: 0 },
-  { id: 'pistol', name: 'Pistol', dmg: 26, rate: 0.24, price: 0, owned: false, reqRespect: 0 },
-  { id: 'smg', name: 'SMG', dmg: 18, rate: 0.09, price: 800, owned: false, reqRespect: 0 },
-  { id: 'shotgun', name: 'Shotgun', dmg: 40, rate: 0.7, price: 1500, owned: false, reqRespect: 0 },
-  { id: 'rifle', name: 'Rifle', dmg: 60, rate: 0.9, price: 3000, owned: false, reqRespect: 400 },
-];
-export const GARAGE = { repair: 100, paint: 250, engine: 800, armour: 1200, engineMax: 2, armourMax: 2, engineBonus: 40, armourBonus: 50 };
-export const RADIO = [
-  { name: 'Coastal Funk', track: 'Boardwalk Boogie · The Tides' },
-  { name: 'Sunset Synth', track: 'Golden Hour · Solmar Nights' },
-  { name: 'Night Drive', track: 'Empty Streets · Night Owl' },
-];
-export const CREW = {
-  mara: { name: 'Mara', role: 'CREW BOSS', init: 'MA', color: '#c94f7c' },
-  diz: { name: 'Diz', role: 'WHEELMAN', init: 'DZ', color: '#4f9dc9' },
-  rook: { name: 'Rook', role: 'DRIVER', init: 'RK', color: '#e5322d' },
-};
-export const CALLSIGNS = ['GULL-11', 'CORAL-25', 'REEF-18', 'TAC-45', 'SURF-7', 'DUNE-33'];
-export const MISSIONS = [
-  { id: 'first-fare', title: 'First Fare', pay: 150, briefing: 'First job, Rook. Pick up the client at the pier, drop them at the Grand Solmar. Easy money.', speaker: 'mara', line: 'First job, Rook. Pier pickup, hotel drop. Don\'t keep the client waiting.', steps: [
-    { kind: 'go', x: 2350, y: 3350, label: 'Pick up the client at Marina Pier' },
-    { kind: 'go', x: 2400, y: 1500, label: 'Drop the client at the Grand Solmar Hotel' } ] },
-  { id: 'hot-wheels', title: 'Hot Wheels', pay: 300, briefing: 'That red sportscar in the beach lot? It\'s ours now. Bring it to the Chop Shop.', speaker: 'diz', line: 'Red sportscar, beach lot, Chop Shop. Take this pistol — you\'ll need it.', steps: [
-    { kind: 'steal', car: 'sport', x: 448, y: 2100, label: 'Steal the red sportscar in the beach lot' },
-    { kind: 'go', x: 3900, y: 1500, label: 'Deliver the sportscar to the Chop Shop' } ] },
-  { id: 'beach-run', title: 'Beach Run', pay: 400, timeLimit: 100, briefing: 'Package at the port, house in the Hills. Hundred seconds. Don\'t be late.', speaker: 'mara', line: 'Port pickup, Hills drop, a hundred seconds on the clock. Move.', steps: [
-    { kind: 'go', x: 3900, y: 3350, label: 'Collect the package at Portside Docks' },
-    { kind: 'go', x: 4200, y: 500, label: 'Deliver the package to the house in the Hills' } ] },
-  { id: 'the-drop', title: 'The Drop', pay: 550, briefing: 'Grab the drop at the marina, then run it to the lighthouse. Coast road is crawling with patrols.', speaker: 'diz', line: 'Marina drop, lighthouse run. Two patrols work the coast road — stay sharp.', steps: [
-    { kind: 'go', x: 2350, y: 3350, label: 'Pick up the drop at the marina' },
-    { kind: 'go', x: 600, y: 350, label: 'Reach the Lighthouse on the north coast' } ] },
-  { id: 'bay-heist', title: 'Bay Heist', pay: 900, briefing: 'The casino is ripe. Walk in, grab the cash, get to the hideout — and shake the heat first.', speaker: 'mara', line: 'Walk into the casino, grab the cash, then vanish. The hideout only counts when you\'re clean.', steps: [
-    { kind: 'go', x: 2100, y: 3050, onFoot: true, label: 'Walk into the Marina Casino and grab the cash' },
-    { kind: 'go', x: 4350, y: 300, needStars: 0, label: 'Escape to the Hideout — only counts once the heat is gone' } ] },
-  { id: 'night-shift', title: 'Night Shift', pay: 650, briefing: 'Drive the casino boss from the Marina Casino to the Lighthouse, then the Hideout. We start at two stars.', speaker: 'mara', line: 'Boss needs a ride: casino, lighthouse, hideout. We\'re already at two stars, so drive clean.', steps: [
-    { kind: 'go', x: 2100, y: 3050, label: 'Pick up the casino boss at the Marina Casino' },
-    { kind: 'go', x: 600, y: 350, label: 'Drive the boss to the Lighthouse' },
-    { kind: 'go', x: 4350, y: 300, label: 'Drop the boss at the Hideout' } ] },
-  { id: 'the-big-one', title: 'The Big One', pay: 1500, briefing: 'Steal the gold truck at Portside Docks, lose a 4-star heat with the chopper on you, then deliver it.', speaker: 'diz', line: 'Gold truck at the docks. Jack it, lose the whole city, bring it home. Big payday.', steps: [
-    { kind: 'steal', car: 'truck', x: 3900, y: 3260, label: 'Steal the gold truck at Portside Docks' },
-    { kind: 'escape', stars: 4, label: 'Lose the 4-star heat — the helicopter is up' },
-    { kind: 'go', x: 3900, y: 1500, label: 'Deliver the gold truck to the Chop Shop' } ] },
-  { id: 'golden-hour', title: 'Golden Hour', pay: 2000, briefing: 'Meet the crew at the casino — then the whole city comes for us. Lose them, get to the hideout, and we\'re legends.', speaker: 'mara', line: 'Golden hour, Rook. Meet the crew, then survive the manhunt. Lose all five stars and get to the hideout.', steps: [
-    { kind: 'go', x: 2100, y: 3050, label: 'Meet the crew at the Marina Casino' },
-    { kind: 'escape', stars: 5, label: 'Survive the manhunt — lose all 5 stars' },
-    { kind: 'go', x: 4350, y: 300, label: 'Deliver to the Hideout' } ] },
-];
+export const CONFIG={world:{w:4800,h:3600},roadsV:[420,980,1540,2100,2660,3220,3780,4340],roadsH:[420,980,1540,2100,2660,3220],roadW:116,sidewalk:26,roadMargin:17,seaX:110,sandX:300,palette:{terracotta:[198,110,78],mauve:[168,120,140],teal:[64,140,140],ochre:[204,164,84],plum:[120,80,110],brick:[164,74,60],olive:[140,140,90]},landmarks:{hotel:{x:2400,y:1500},casino:{x:2100,y:3050},chop:{x:3900,y:1500},hospital:{x:2660,y:980},hq:{x:2100,y:2100},hideout:{x:4350,y:300},lighthouse:{x:600,y:350},pier:{x:2350,y:3350},docks:{x:3900,y:3350}},start:{x:2350,y:3180,carX:2440,carY:3240},player:{walk:175,run:265,punchDmg:12,punchRate:0.38,punchReach:34,hp:100,regen:4,regenDelay:8,bulletSpeed:640},cars:{sedan:{top:430,accel:420,grip:8,w:44,len:88,color:'#2f6fd0'},taxi:{top:410,accel:400,grip:8,w:44,len:88,color:'#f2c200'},sport:{top:560,accel:520,grip:9.5,w:44,len:90,color:'#d21f2b'},truck:{top:330,accel:260,grip:6.5,w:56,len:120,color:'#c9a227'},van:{top:380,accel:340,grip:7,w:48,len:100,color:'#e8e4da'},police:{top:500,accel:480,grip:9,w:44,len:88,color:'#1c2b4a'},classic:{top:400,accel:380,grip:7.5,w:44,len:86,color:'#2e8b8b'}},traffic:{cars:16,parked:9,peds:26,cruiseMin:120,cruiseMax:210},wanted:{max:5,quiet:20,decay:14,bustTime:1.6,penalty:100,heliStars:3,shootStars:3},taxi:{fareMin:25,fareMax:70,gapMin:30,gapMax:45},respect:{perMission:100,perFare:15,perLevel:200},paintColors:['#c0392b','#2980b9','#27ae60','#f39c12','#8e44ad','#ecf0f1','#2c3e50','#16a085'],radio:[{name:'Coastal Funk 88.1'},{name:'Sunset Synth 94.5'},{name:'Bay Nights 101.3'}],crew:{boss:'Mara',wheelman:'Diz',player:'Rook'},callsigns:['GULL-11','CORAL-25','REEF-18','TAC-45','AIR-1']};
+export const WEAPONS=[{id:'fists',name:'Fists',dmg:12,rate:0.38,price:0},{id:'pistol',name:'Pistol',dmg:26,rate:0.24,price:0},{id:'smg',name:'SMG',dmg:18,rate:0.09,price:800},{id:'shotgun',name:'Shotgun',dmg:40,rate:0.7,price:1500},{id:'rifle',name:'Rifle',dmg:60,rate:0.9,price:3000,reqRespect:400}];
+export const GARAGE={repair:100,paint:250,engine:800,armour:1200,engineMax:2,armourMax:2,engineBonus:40,armourBonus:50};
+export const MISSIONS=[
+{id:'first-fare',title:'First Fare',pay:150,briefing:'Mara needs a driver. Pick up the client at Marina Pier and take them to the Grand Solmar Hotel.',steps:[{label:'Pick up the client at Marina Pier',x:2350,y:3350,r:90,type:'pickup'},{label:'Deliver the client to the Grand Solmar Hotel',x:2400,y:1500,r:110,type:'deliver'}]},
+{id:'hot-wheels',title:'Hot Wheels',pay:300,briefing:'A red sportscar is parked in the beach lot. Steal it and deliver it to the Chop Shop. Mara will slip you a pistol.',steps:[{label:'Steal the red sportscar in the beach lot',x:700,y:3300,r:120,type:'steal',car:'sport'},{label:'Deliver the sportscar to the Chop Shop',x:3900,y:1500,r:110,type:'deliver'}]},
+{id:'beach-run',title:'Beach Run',pay:400,briefing:'A package is waiting at Portside Docks. Get it to the house in The Hills within 100 seconds.',timer:100,steps:[{label:'Collect the package at Portside Docks',x:3900,y:3350,r:90,type:'pickup'},{label:'Deliver the package to the house in The Hills',x:4200,y:500,r:110,type:'deliver'}]},
+{id:'the-drop',title:'The Drop',pay:550,briefing:'Pick up the drop at the marina and reach the lighthouse while two patrols circle the coast road.',patrols:2,steps:[{label:'Pick up the drop at the marina',x:2350,y:3350,r:90,type:'pickup'},{label:'Reach the lighthouse on the north coast',x:600,y:350,r:110,type:'deliver'}]},
+{id:'bay-heist',title:'Bay Heist',pay:900,briefing:'Walk into the Marina Casino, grab the cash, then escape to the Hideout. The Hideout only counts once the heat is gone.',steps:[{label:'Walk into the Marina Casino and grab the cash',x:2100,y:3050,r:110,type:'grab',heat:2},{label:'Escape to the Hideout once wanted is 0',x:4350,y:300,r:110,type:'deliver',requireWanted0:true}]},
+{id:'night-shift',title:'Night Shift',pay:650,briefing:'Drive the casino boss from the Marina Casino to the Lighthouse, then to the Hideout. You start with 2 stars.',startWanted:2,steps:[{label:'Pick up the casino boss at the Marina Casino',x:2100,y:3050,r:110,type:'pickup'},{label:'Drive the boss to the Lighthouse',x:600,y:350,r:110,type:'deliver'},{label:'Drive the boss to the Hideout',x:4350,y:300,r:110,type:'deliver'}]},
+{id:'the-big-one',title:'The Big One',pay:1500,briefing:'Steal the gold truck at Portside Docks, lose the 4-star manhunt with the helicopter overhead, then deliver it to the Chop Shop.',steps:[{label:'Steal the gold truck at Portside Docks',x:3900,y:3350,r:110,type:'steal',car:'truck',heat:4},{label:'Lose the 4-star wanted level',type:'loseHeat'},{label:'Deliver the gold truck to the Chop Shop',x:3900,y:1500,r:110,type:'deliver'}]},
+{id:'golden-hour',title:'Golden Hour',pay:2000,briefing:'Meet the crew at the Marina Casino, survive the scripted 5-star manhunt until the heat is gone, then deliver to the Hideout.',steps:[{label:'Meet the crew at the Marina Casino',x:2100,y:3050,r:110,type:'meet',heat:5},{label:'Survive the 5-star manhunt until wanted is 0',type:'survive'},{label:'Deliver to the Hideout',x:4350,y:300,r:110,type:'deliver'}]}];

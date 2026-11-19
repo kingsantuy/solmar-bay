@@ -3,25 +3,26 @@
 The design this entry was built from, and the record of how it was built.
 Everything in the game is original — city, characters, vehicles, names, story,
 art, sound and music. No Rockstar name, logo, character, map or asset appears
-anywhere.
+anywhere. No third-party library is vendored: the renderer is raw WebGL2
+written for this entry, and the only 3D assets are ten original Blender
+models made for it.
 
 ## 1. Concept
 
-Solmar Bay is a 3D open-world crime game rendered with three.js (vendored
-under `game/vendor/`, no network requests), played offline in a desktop
-browser from static files, with keyboard and mouse. A third-person chase
-camera follows the player behind the car and over the shoulder on foot. The
-player is Rook (Marco "Rook" Reyes), a driver-for-hire new to a sun-soaked
-coastal city, who works seven story jobs for the local crew while the police,
-traffic and crowds go about their day. The judge weighs completeness above
-all: a city explored on foot and by car, traffic and pedestrians, cars to
-steal, a wanted level with police who respond, missions and a story, combat,
-a HUD with a minimap, a start screen and a save, plus polish (sound, effects,
-menus). The top 10 finalists are actually played in desktop Chrome, so
-playability is not optional — the simulation runs on a 2D plane (x east,
-y south, 4800 by 3600) and the 3D renderer maps it to three.js space
-(x - 2400, 0, y - 1800), so the tested game logic and the 3D presentation
-stay in sync.
+Solmar Bay is a 3D open-world crime game rendered with raw WebGL2, played
+offline in a desktop browser from static files, with keyboard and mouse. A
+third-person chase camera follows the player behind the car and over the
+shoulder on foot. The player is Rook (Marco "Rook" Reyes), a driver-for-hire
+new to a sun-soaked coastal city, who works eight story jobs for the local
+crew while the police, traffic and crowds go about their day. The judge
+weighs completeness above all: a city explored on foot and by car, traffic
+and pedestrians, cars to steal, a wanted level with police who respond,
+missions and a story, combat, a HUD with a minimap, a start screen and a
+save, plus polish (sound, effects, menus). The top 10 finalists are actually
+played in desktop Chrome, so playability is not optional — the simulation
+runs on a 2D plane (x east, y south, 4800 by 3600) and the raw WebGL
+renderer maps it to 3D space (x - 2400, height, y - 1800), so the tested
+game logic and the 3D presentation stay in sync.
 
 ## 2. The city
 
@@ -42,11 +43,15 @@ in eight is a park (green with trees), about one in thirteen a parking lot
 buildings are taller (up to nine floors, twelve for the hotel) and denser;
 elsewhere one to four floors. In 3D each building is a box with a procedural
 canvas window texture, tinted from a warm palette (terracotta, mauve, teal,
-ochre, plum, brick, olive). Palm trees line the beach roads; lamps line the
-streets. The marina has a wooden pier at the south edge; the port has stacked
-shipping containers in four colours; a striped red-and-white lighthouse
-stands on the north coast. Sunset lighting: a warm directional sun with
-shadows, hemisphere sky light, and distance fog for depth.
+ochre, plum, brick, olive). Ten original Blender models are used where they
+exist (two apartment blocks, the Grand Solmar Hotel, two palm variants, the
+police helicopter, sedan, sportscar, police car and taxi van); other
+buildings use the procedural box with the window texture. Palm trees line
+the beach roads; lamps line the streets. The marina has a wooden pier at
+the south edge; the port has stacked shipping containers in four colours; a
+striped red-and-white lighthouse stands on the north coast. Golden-hour
+lighting: a warm low sun, hemisphere sky light, warm distance fog, a sky
+dome gradient with a sun disc and glow, and emissive lit windows at dusk.
 
 Fixed landmarks the story points at: Grand Solmar Hotel at (2400, 1500);
 Marina Casino at (2100, 3050); Chop Shop at (3900, 1500); Solmar General
@@ -69,21 +74,22 @@ the marina road, never on a road.
 
 ### On foot
 Walk speed 175, run 265 with Shift. WASD or arrows move; the player faces
-the walk direction, or the mouse aim point while armed with the pistol
-(the renderer raycasts the mouse to the ground plane). E enters a nearby car
-(within 64). F punches (12 damage, 0.38 s between punches, 34 reach). Keys 1
-and 2 switch between fists and pistol once the pistol is owned. The player
-is a red-jacketed low-poly figure in a crowd.
+the walk direction, or the mouse aim point while armed. E enters a nearby
+car (within 70). F punches (12 damage, 0.38 s between punches, 34 reach).
+Keys 1–5 switch weapons once owned; Q opens the weapon wheel. The player
+is a red-shirted low-poly figure in a crowd, with a held gun mesh shown
+when a gun is equipped (scaled per weapon: pistol 1, SMG 1.3, shotgun 1.55,
+rifle 1.85).
 
 ### Driving
 Arcade car physics on a velocity vector: forward acceleration and braking, a
-steering rate that grows with speed, lateral grip that bleeds off sideways
-slide, and a handbrake (Space) that drops grip so the car drifts. Each model
-has its own top speed, acceleration and grip: Sedan 430, Taxi 410, Sport 560,
-Truck 330, Van 380, Police 500, Classic 400. Cars take damage from wall and
-car impacts, smoke below 70 health and heavily below 45, and are towed away
-once wrecked (traffic respawns elsewhere). The chase camera follows behind
-the car with a smooth lag plus a small shake on hard impacts.
+steering rate that grows with speed, lateral grip, and a handbrake (Space)
+that drops grip so the car drifts. Each model has its own top speed,
+acceleration and grip: Sedan 430, Taxi 410, Sport 560, Truck 330, Van 380,
+Police 500, Classic 400. Cars take damage from wall and car impacts. The
+chase camera follows behind the car (120 units back, 35 up) with a smooth
+lag plus a small shake on hard impacts; on foot it sits 75 back, 28 up.
+Field of view kicks from 62 degrees cruising to about 68 at top speed.
 
 ### Stealing cars
 Pressing E near a parked car takes it (a crime: plus one wanted star).
@@ -113,23 +119,24 @@ client shows a gold dollar sign above their head.
 
 ### Wanted level and police
 Wanted runs from 0 to 5 stars. Crimes add stars: stealing a car or knocking
-out or shooting a pedestrian adds one; shooting a cop adds two; shooting at the
-police adds one. Quiet time cools the heat: after 20 seconds without a crime
-and with no police nearby, one star fades every 14 seconds. The police answer
-with patrol cars — one plus half the wanted level, up to five — spawning on a
-road 650–850 from the player every 2.5 seconds while the count is short,
-sirens wailing, steering toward the player and ramming. Patrols that lose the
-player drive off once the heat is gone and despawn beyond 1100. From three
-stars the police also shoot at the player (from cars within 520 and from
-foot cops within 320, about one shot per 1.1 seconds, deliberately
-inaccurate), and a police helicopter joins the chase, circling overhead with
-a searchlight. A foot cop who holds the player for 1.6 seconds busts him; at
-zero health the player is wasted. Both wake the player up at the station
-(Police HQ) or the hospital (Solmar General) with full health, no wanted
-level, and $100 lighter.
+out or shooting a pedestrian adds one; shooting a cop adds two. Quiet time
+cools the heat: after 20 seconds without a crime and with no police nearby,
+one star fades every 14 seconds. The police answer with patrol cars — one
+plus half the wanted level, up to five — spawning on a road 650–850 from the
+player every 2.5 seconds while the count is short, sirens wailing, steering
+toward the player and ramming. Patrols that lose the player drive off once
+the heat is gone and despawn beyond 1100. From three stars the police also
+shoot at the player (from cars within 520 and from foot cops within 320,
+about one shot per 1.1 seconds, deliberately inaccurate), and a police
+helicopter joins the chase, circling overhead with a searchlight cone. From
+four stars, roadblocks appear (up to two, each four police cars parked
+across the road). A foot cop who holds the player for 1.6 seconds busts
+him; at zero health the player is wasted. Both wake the player up at the
+station (Police HQ) or the hospital (Solmar General) with full health, no
+wanted level, and $100 lighter.
 
 ### Missions and story
-Seven story jobs, in order, each with a briefing, a pay, and steps that point
+Eight story jobs, in order, each with a briefing, a pay, and steps that point
 at a pulsing yellow waypoint ring and beam on the map, the minimap and an edge
 arrow with distance:
 
@@ -149,69 +156,90 @@ arrow with distance:
 7. The Big One ($1500): steal the gold truck at Portside Docks, lose a
    4-star wanted level with the helicopter active, then deliver it to the
    Chop Shop.
+8. Golden Hour ($2000): meet the crew at the Marina Casino, survive a
+   scripted 5-star manhunt until the wanted level returns to zero, then
+   deliver to the Hideout.
 
 Finishing a mission pays out, plays a jingle, saves the game and opens the
 next job; failing (only the timed delivery can fail, by running out of time)
-leaves the job open to retry. After the seventh job the story is complete and
+leaves the job open to retry. After the eighth job the story is complete and
 the city is free roam. Taxi fares are the side job: when no mission is active,
 a fare ($25–$70) appears every 30–45 seconds — drive to the waiting client,
 take them aboard, drive to their destination for cash. Fare clients and
 destinations are both placed on roads so they are always reachable.
 
-### Combat
-Fists do 12 damage at close range. The pistol does 26 damage per shot, one
-shot every 0.24 seconds, bullets travelling 640/s toward the mouse ground
-point, with a muzzle flash and a danger pulse that scatters nearby
-pedestrians. Police bullets do 9 damage. Player health is 100 and regenerates
-4 per second after 8 seconds without committing a crime. Getting hit shakes
-the screen and flashes red; below 30 health a red vignette closes in.
+### Combat and weapons
+Five weapons on the wheel (Q, or keys 1–5): Fists (12 damage, 0.38 s),
+Pistol (26 damage, 0.24 s), SMG ($800, 18 damage, 0.09 s), Shotgun ($1500,
+40 damage, 0.7 s), Rifle ($3000, 60 damage, 0.9 s, locked until respect
+400). Bullets travel 640/s toward the mouse ground point, with a muzzle
+flash and a danger pulse that scatters nearby pedestrians. Police bullets do
+9 damage. Player health is 100 and regenerates 4 per second after 8 seconds
+without committing a crime. Getting hit shakes the screen and flashes red;
+below 30 health a red vignette closes in.
+
+### Respect, garage and dispatch
+Respect starts at 0, +100 per mission, +15 per taxi fare; level is points
+divided by 200, and the rifle unlocks at 400 respect. The garage at the
+Chop Shop (G when parked there) sells Repair ($100), Respray ($250),
+Engine ($800 per level, up to 2, +40 top speed each) and Armour ($1200 per
+level, up to 2, +50 max health each). The dispatch panel lists the nearest
+police units first (up to five) with callsigns (GULL-11, CORAL-25, REEF-18,
+TAC-45, AIR-1), distance in metres and status (RAMMING, FIRING, SPOTLIGHT,
+ROADBLOCK, PATROL). Dialogue shows the crew boss Mara's briefing with a
+portrait whenever a mission is active.
 
 ### HUD and minimap
-A DOM overlay. Top left: money in green, a health bar, five wanted stars
-(gold filled, grey empty), and the current district name. Top right: a 190 by
-142 minimap canvas showing sea, sand, roads, the mission target as a yellow
+A DOM overlay. Top left: money in green, respect rank and bar, a health bar,
+an armour bar, five wanted stars (gold filled, grey empty), and the current
+district name, plus the dispatch list when wanted. Top right: a 190 by 142
+minimap canvas showing sea, sand, roads, the mission target as a yellow
 diamond, cars as grey dots, police as red dots, the helicopter as a red H,
-and the player as a white arrow. Bottom left: the current mission title and
-objective, plus a countdown when a mission is timed. Bottom right: speed in
-km/h and car name while driving, or the weapon and the "E — enter car" hint
-on foot. Centre top: toast messages (crimes, pickups, payouts) that fade
-after six seconds. A big district name flashes when entering a new district
-(suppressed in staged screenshot mode). An edge arrow with a distance in
-metres points at off-screen objectives. A crosshair follows the mouse while
-the pistol is out.
+and the player as a white arrow; below it a five-slot weapon strip. Bottom
+left: the current mission title, stage (for example STAGE 1/2), objective,
+next step and IN SIGHT indicator. Bottom right: speed in km/h, car model
+and condition (PRISTINE, DENTED, SMOKING, WRECKED) while driving, the radio
+station while driving, or the weapon and the "E — enter car" hint on foot.
+Centre top: toast messages (crimes, pickups, payouts) that fade after six
+seconds. A big district name flashes when entering a new district. An edge
+arrow with a distance in metres points at off-screen objectives. A
+crosshair follows the mouse while a gun is out. The weapon wheel (Q) shows
+all five weapons with prices and lock state; the garage menu (G) shows the
+four tunes with prices.
 
 ### Screens
 Title screen: a sunset gradient over sea and sand, the SOLMAR BAY title, the
 story line, the full control list, and "Press Enter to start" (or "Continue"
 with jobs done and money carried when a save exists). Pause (Esc or P) offers
-resume, restart and save-and-quit. Busted and Wasted screens explain what
-happened and return to play on Enter.
+resume, restart and save-and-quit; Enter resumes from pause. Busted and
+Wasted screens explain what happened and return to play on Enter.
 
 ### Save
 Local storage under the key solmar-bay-save-v1 holds money, completed mission
-ids, statistics (cars stolen, shots fired, missions done, fares, money earned)
-and the player's position. The game saves when a mission finishes and when the
-player quits from pause. A missing or broken save is a fresh start, never a
-crash.
+ids, respect points, owned weapons, garage levels, statistics (cars stolen,
+shots fired, missions done, fares, money earned) and the player's position.
+The game saves when a mission finishes and when the player quits from pause.
+A missing or broken save is a fresh start, never a crash. In Node (the
+headless logic test) an in-memory fallback stands in for local storage.
 
 ### Sound and music
 All sound is synthesized with WebAudio — no audio files and no network. An
 engine hum (sawtooth through a low-pass filter) follows the car's speed;
 police sirens alternate two tones; gunshots are filtered noise bursts; cash,
 pickups, mission success and failure have their own short cues; the horn is
-two square notes. Three synth radio stations (coastal-funk loop plus two
-more, cycled with R) play while driving. M toggles mute. Audio starts only
-after the first key or click, as browsers require.
+two square notes. Three synth radio stations (Coastal Funk 88.1, Sunset
+Synth 94.5, Bay Nights 101.3, cycled with R) play while driving. M toggles
+mute. Audio starts only after the first key or click, as browsers require.
 
 ### Screenshots
-The game stages deterministic scenes from the URL: a shot parameter names the
-scene and a seed parameter fixes the random layout, so the same URL always
-paints the same frame; after painting twice the page sets a ready flag for the
-screenshot tool. Four shots, each a real render of the game in a browser,
-never edited or borrowed: the cover shows a three-star police chase with the
-helicopter (the most systems at once — car, police, heli, wanted stars,
-minimap, mission text); then driving down the coastal avenue toward the
-lighthouse; then on foot downtown among pedestrians and traffic; then a
+The game stages deterministic scenes from the URL: a shot parameter names
+the scene and a seed parameter fixes the random layout, so the same URL
+always paints the same frame; after painting twice the page sets a ready
+flag for the screenshot tool. Four shots, each a real render of the game in
+a browser, never edited or borrowed: the cover shows a three-star police
+chase with the helicopter (the most systems at once — car, police, heli,
+wanted stars, minimap, mission text); then driving down the coastal avenue
+toward the lighthouse; then on foot downtown with the pistol; then a
 mission in progress with its waypoint ring and beam. Each shot is a JPEG of
 at most 256 KiB, long side at most 1280 pixels, short side at least 480.
 
@@ -235,9 +263,12 @@ Entry repository root (~/workspace/makefun/gta6-01/entry/):
 - vendor/makefun-game.ts — the kit's own dossier library, copied verbatim as
   the kit instructs (vendored, not authored code).
 - game/index.html — the page: a full-window canvas, the HUD mount point, a
-  screen-reader status line, and the module script that boots the game.
-- game/vendor/three.module.min.js — three.js r160, vendored (670,681 bytes;
-  the dossier lists it as vendored, never in its text).
+  screen-reader status line, and the module script that boots the game. Its
+  CSS scopes the full-window rule to the game canvas only, so the HUD
+  minimap keeps its own 190 by 142 size.
+- game/assets/ — the ten original Blender models as .glb (binary, not
+  counted as text): buildinga, buildingb, heli2, hotel, palm, palm2,
+  police, sedan, sportscar, taxi2.
 - game/src/ — the game itself, one clear job per file (see below).
 - screenshots/ — the four staged shots.
 
@@ -246,55 +277,90 @@ Game sources, in dependency order:
 - rng.js — a seeded random generator (mulberry32) with helpers for ranges,
   integers, picks and chance rolls. Same seed, same city.
 - config.js — every tuning number in one place: world size, palette, player
-  speeds and combat numbers, the seven car models with top speed,
-  acceleration, grip, size and colours, traffic and pedestrian counts, the
-  wanted rules, and the seven mission definitions (title, pay, briefing, steps).
+  speeds and combat numbers, the car models with top speed, acceleration,
+  grip, size and colours, traffic and pedestrian counts, the wanted rules,
+  the five weapons, the garage prices, the radio stations, the crew names,
+  and the eight mission definitions (title, pay, briefing, steps).
 - city.js — city generation from the seed (roads, blocks, buildings, parks,
-  lots, trees, lamps, landmarks) plus collision queries: whether a circle hits
-  a building, the sea or the edge; pushing a circle out of what it overlaps;
-  whether a point is on a road; random and nearest road points; districtAt.
-- state.js — the whole game state and the fixed 1/60-second step that advances
-  it: building a fresh game from a seed (and a save, when continuing), running
-  the player, traffic, police, helicopter, collisions, pedestrians, bullets,
-  missions, taxi, particles, wanted decay, health regeneration, message
-  fading and autosaving, in that order. Exports createGame / stepGame.
-- input is built by main.js each frame and passed to stepGame (WASD/arrows,
-  Shift run, E enter, Space handbrake, F punch, 1/2 weapon, Esc/P pause,
-  M mute, R radio, Enter confirm, mouse click to shoot, aim as world
-  coordinates from the renderer).
-- save.js — loading, saving and clearing the local-storage save.
+  lots, trees, lamps, landmarks) plus collision queries: whether a circle
+  hits a building, the sea or the edge; whether a point is on a road; random
+  and nearest road points; districtAt.
+- state.js — the whole game state and the fixed 1/60-second step that
+  advances it: building a fresh game from a seed (and a save, when
+  continuing), running the player, traffic, police, helicopter, collisions,
+  pedestrians, bullets, missions, taxi, wanted decay, health regeneration,
+  and screen transitions (title, play, pause, wasted, busted), in that
+  order. Exports createGame / stepGame, and re-exports the combat
+  purchases. The game state keeps weapons as { list: [...] } and the pause
+  as a screen state, which the HUD and the input layer both read.
+- world.js — traffic, pedestrians, taxi and world collision, called from
+  the step: traffic cars follow their road and lane, civilians wander and
+  flee, cops chase and hold, the taxi client and fare run, and collideWorld
+  keeps cars and the player out of buildings.
+- combat.js — missions, police, combat and purchases: mission step
+  advancement and timers, police spawn/chase/helicopter/roadblocks, wanted
+  decay and bust, bullets and punches, and buyWeapon / buyGarage /
+  selectWeapon with their respect and money gates.
+- save.js — loading, saving and clearing the local-storage save, with an
+  in-memory fallback when local storage is unavailable.
 - audio.js — the WebAudio synthesizer: engine hum, sirens, shots, crash,
   cash, pickup, success and failure cues, horn, and three radio stations,
   with mute. Fully guarded: it no-ops safely with no AudioContext.
-- render3d.js — the three.js renderer: createRenderer(canvas) with
-  buildCity(game), sync(game, dt), screenToGround(x, y), resize and dispose.
-  Builds the static city once (ground, sea, sand, roads, window-textured
-  buildings, instanced trees and lamps, pier, containers, lighthouse,
-  landmark signs, sunset sun + shadows + fog), keeps a mesh per car, ped,
-  player, helicopter (spinning rotor, searchlight cone), bullet and particle,
-  and drives the smoothed chase camera with shake.
+- webgl.js — the raw WebGL2 foundation: column-major 4x4 matrix math
+  (multiply, translate, scale, rotate, perspective, lookAt, transform and
+  clip), vector helpers, shader compile/link, mesh building from position /
+  normal / colour / UV / index arrays, instanced meshes, canvas textures
+  and canvas resize.
+- gltf.js — a minimal glTF 2.0 binary-container loader written for this
+  entry: parses the JSON chunk and the binary chunk, decodes accessors
+  (interleaved position/normal, unsigned-short indices), and returns
+  per-primitive positions, normals, colours and indices with a local
+  transform matrix. It handles only what the entry's own models use
+  (position and normal data, indexed triangles, flat base-colour materials,
+  no textures, images, skins or animations). Model files are fetched from
+  the game's own assets directory, never from the network.
+- models.js — the model cache: the ten model names, loadAll (fetches and
+  parses each .glb once), getModel / hasModel / isReady.
+- render.js — the raw WebGL2 renderer: createRenderer(canvas) with
+  buildCity(game), sync(game, dt), screenToGround(x, y), project(x, y, h),
+  resize, dispose, a modelsReady flag, getStats (draw calls, triangles) and
+  hasModel / getModel inspection. Builds the static city once (ground, sea,
+  sand, roads, window-textured buildings, the ten Blender models fitted to
+  their footprints, instanced palms and lamps, pier, containers,
+  lighthouse), then every sync rebuilds the dynamic meshes from the game
+  state (cars from the glTF models at double scale, pedestrians and the
+  player as low-poly figures, the held gun, the helicopter with a spinning
+  rotor and a searchlight cone, roadblocks, bullets, particles, the
+  waypoint ring and beam), and drives the smoothed chase camera with
+  trauma shake. Shadows are contact-shadow blobs under cars, pedestrians
+  and the player, not a shadow map.
 - hud.js — the DOM HUD and minimap (see §3), plus the title, pause, busted
-  and wasted overlays. Touches the DOM only when a value changes.
-- shots.js — staging the four screenshot scenes from a fresh game: reset the
-  world, place the player and the police and traffic where the scene needs
-  them, then simulate a fixed number of steps with scripted inputs so the
-  frame shows the game mid-action (a chase already running, a drive already
-  moving, a mission already under way). Imports the mission definitions from
-  config.js so staging cannot drift from the real game.
+  and wasted overlays. Touches the DOM only when a value changes. It reads
+  both the game state's weapons list shape and the dispatch entries' field
+  names, and shows Mara's mission briefing as dialogue while a mission is
+  active.
+- shots.js — staging the four screenshot scenes from a fresh game: reset
+  the world, place the player and the police and traffic where the scene
+  needs them, then simulate a fixed number of steps with scripted inputs so
+  the frame shows the game mid-action (a chase already running, a drive
+  already moving, a mission already under way). Imports the mission
+  definitions from config.js so staging cannot drift from the real game.
 - main.js — boot and the one loop: read the URL parameters (seed, shot),
   build the game, run the fixed-step loop with input each frame, switch
-  between the title, play, paused, busted and wasted screens, and in shot mode
-  paint the staged scene twice and set the ready flag. The logic layer owns
-  every screen transition; main only adds pause-screen R-restart and
-  Q-save-and-quit.
+  between the title, play, paused, busted and wasted screens, and in shot
+  mode paint the staged scene twice and set the ready flag. Builds the
+  input each frame from held and just-pressed keys, mapping them to the
+  fields the state layer reads (up/down, weapon1–5, confirm, pause, wheel,
+  garage, radio, mute) while keeping the frame's own fields (fwd/back, w).
 
 Key interfaces, in words: creating a game takes a seed and an optional save
 and an optional audio object and returns the whole state object (city,
-player, cars, pedestrians, bullets, particles, helicopter, missions, taxi
-job, statistics, camera, audio). Advancing the game takes that state, the
-input state and a time step. The renderer takes the state and paints it; the
-HUD takes the state and updates the DOM. Staging a screenshot takes a scene
-name and a fresh game and returns the scene to draw.
+player, cars, pedestrians, bullets, helicopter, missions, taxi job,
+statistics, weapons, garage, dispatch, camera, audio). Advancing the game
+takes that state, the input state and a time step. The renderer takes the
+state and paints it; the HUD takes the state and updates the DOM. Staging a
+screenshot takes a scene name and a fresh game and returns the scene to
+draw.
 
 ## 5. Key numbers
 
@@ -304,226 +370,128 @@ name and a fresh game and returns the scene to draw.
 - Cars: Sedan 430, Taxi 410, Sport 560, Truck 330, Van 380, Police 500,
   Classic 400 top speed. Traffic cruises 120–210. Sixteen traffic cars,
   nine parked cars, twenty-six pedestrians, at most five police cars, one
-  helicopter from 3 stars.
+  helicopter from 3 stars, up to two roadblocks from 4 stars.
+- Weapons: Fists 12, Pistol 26, SMG 18, Shotgun 40, Rifle 60 damage; prices
+  $0, $0, $800, $1500, $3000; rifle needs respect 400.
 - Wanted: 0–5 stars; crimes add 1 (2 for shooting a cop); quiet 20 seconds,
   then one star fades every 14 seconds; bust takes 1.6 seconds of a cop
   holding the player; busted or wasted costs $100.
-- Missions pay $150, $300, $400, $550, $900, $650 and $1500; taxi fares pay
-  $25–$70.
+- Respect: +100 per mission, +15 per fare; level is points / 200.
+- Missions pay $150, $300, $400, $550, $900, $650, $1500 and $2000; taxi
+  fares pay $25–$70.
 - Gate limits (the sealed scorer refuses past these): game/ at most 993 files
   and directories together and 48 MiB in all, every path at most 1000 bytes,
   game/index.html at most 1 MiB; 3–4 screenshots, each at most 256 KiB, long
   side at most 1280 px, short side at least 480 px; dossier.json at most
-  1.5 MiB; dossier text at most 160 KiB. Own source is about 124 KB, so the
-  dossier shows it all; three.js is vendored and never in the text.
+  1.5 MiB; dossier text at most 160 KiB. Own source is about 150 KB, so the
+  dossier shows it all; the ten .glb models are binary and never in the
+  text.
 - Bounty: $1,666 total; 1st $500, 2nd $250, 3rd $150, 100 paid places.
   Entries close 24 November 2026 at 15:00 UTC (22:00 WIB); result due
   10 December 2026 at 15:00 UTC.
 
 ## 6. As built — 19 November 2026
 
-A 2D top-down version was built first (commits f647419, 1028ce8) and shown to
-the user, who rejected it after seeing the leaderboard: the top entries are
-polished 3D games. This 3D version was built in a second recorded session
-under the same recording (01a1f124-30e3-74c0-a1e9-91a39b07469f): the 2D
-sources were deleted first, three.js r160 was vendored, and the game was
-rebuilt as a 3D chase-cam game by two parallel workers (one for the logic
-layer, one for the presentation layer) under the coordinator, all writing
-fresh in recorded sessions — nothing was copied from the 2D drafts, the
-starter's game, or the web. The kit plumbing (vendor/makefun-game.ts,
-LICENSE, main.ts, serve.ts) is copied verbatim as the kit instructs.
+Round 1 (commit 23d3bfe) was built on three.js and was rejected: the
+vendored three.js library is 42,182 lines the agent never wrote, so the
+agent's own writing was only 6.0% of the counted lines (2,875 of 47,239,
+under the 30% required) and 91.6% of the text was unwritten (over the 40%
+allowed), and the three vendored files also failed the transcripts check.
+The fix is this rebuild: the whole game rewritten in raw WebGL2 with no
+vendored library at all, in recorded sessions, writing every line fresh.
+The ten Blender models are the entrant's own and are binary, so they are
+not counted as text lines.
 
 What was verified before the commit:
 
-- A headless logic test (39 checks, in /tmp, not part of the entry): city
-  builds with no building or container on a road across 5 seeds, title to
-  mission 1, walking, entering the starter sedan (no star), driving to top
-  speed, exiting, stealing a parked car (+1 star), mission 1 pickup and
-  dropoff ($150), mission 2 steal and delivery ($450 total, pistol earned),
-  police spawn and helicopter at 3 stars, shooting, a shot pedestrian going
-  down, wanted decay to 0, wasted and busted transitions with respawns,
-  save/load round-trip and clear, mission 3 timeout and Enter retry. All 39
-  pass.
+- A headless logic test (121 checks, in the playtest directory, not part of
+  the entry): city builds with no building or container on a road across 5
+  seeds, title to mission 1, walking, entering the starter sedan (no star),
+  driving to top speed, exiting, stealing a parked car (+1 star), mission 1
+  pickup and dropoff ($150), mission 2 steal and delivery, police spawn and
+  helicopter at 3 stars, roadblocks at 5 stars, shooting, a shot pedestrian
+  going down, wanted decay to 0, wasted and busted transitions with
+  respawns, save/load round-trip and clear, mission 3 timeout and Enter
+  retry, weapon purchase and rifle respect gate, garage engine/armour/paint
+  purchases, respect gain. All 121 pass.
 - A real browser playtest in Playwright Chromium (SwiftShader WebGL2):
-  zero console errors, zero page errors across all runs. Title shows, Enter
-  starts play and auto-starts "First Fare", walking works, E enters the
-  starter sedan with 0 wanted stars, driving works with a live speed
-  readout, E exits, Esc pauses and Enter resumes, HUD money/district/mission
-  all live, all 4 shot URLs set the ready flag.
+  44 of 44 checks pass with zero console and zero page errors (walk, drive,
+  steal, three-star police with helicopter, roadblocks at five stars,
+  missions 1, 2 and 8 with Mara's dialogue, weapon wheel with all five
+  weapons and key picks, garage engine purchase, pause and resume, all four
+  shot URLs reaching the ready flag, the four glTF car models and the hotel
+  model loaded with the renderer drawing).
 - The four staged screenshots, each a real 3D render, 1280 by 800 JPEGs of
-  75–86 KiB. A coordinator fix suppressed the district banner in shot mode
-  (it covered the centre of every frame); the shots were re-taken after the
-  fix and read back as images.
-- main.ts run with MAKEFUN_OUTPUT_DIR: dossier.json 568,883 bytes, dossier
-  text 124,779 bytes (the whole own source fits), game/ 794,629 bytes in 15
-  entries, index.html 652 bytes — every gate limit met, and no network
-  references anywhere in game/.
+  138–161 KiB. Read back as images: the cover shows the red sportscar in a
+  three-star chase with police cars and the helicopter searchlight; drive
+  shows the blue sedan on a street with buildings and a police car ahead;
+  on foot shows Rook with the pistol on a street; mission shows the red
+  sportscar under the waypoint beam with the Hot Wheels briefing.
+- main.ts run: dossier.json 915,516 bytes (limit 1.5 MiB), dossier text
+  116,238 bytes (limit 160 KiB), game/ 572,892 bytes in 29 entries (limit
+  48 MiB, 993 entries), index.html 534 bytes, no remote network references
+  in game/ (the only fetch loads the game's own local .glb files).
 
 Bugs the testing caught and fixed (all in recorded sessions):
 
-- Port containers overlapped the 3780 road band by 6 px; the centre offset
-  was corrected.
-- Police cars overshot their on-foot standoff into the "police nearby"
-  radius, stalling wanted decay; they now hold about 320 px with a
-  proportional approach.
-- Just-pressed flags were cleared before buildInput read them, so E/F/1/2
-  never reached the game.
-- The camera never snapped on first sync, so shot mode rendered from the
-  world origin; it now snaps before the first staged frame.
-- Centre-vs-corner rect mismatch: the city is centre-based, the renderer
-  and minimap assumed corner-based, shifting every building; fixed to match.
-- Tree `s` is a scale factor (0.8–1.3), not a radius; trees rendered
-  microscopic until fixed.
-- Main owned screen transitions and skipped the logic's mission start on
-  title Enter; stepGame now owns all transitions and main only adds
-  pause-screen R-restart and Q-save-and-quit.
-- The district banner covered the centre of every staged screenshot; it is
-  now suppressed in shot mode.
+- The game loop was dead on the first frame: hud.js called .map on the
+  weapons state, which is an object { list: [...] }, not an array. The HUD
+  now normalises the list (object .list, plain array, or the default table).
+- The input layer built fwd/back and a weapon number, but the state layer
+  reads up/down and weapon1–5 booleans, so WASD driving and keys 1–5 did
+  nothing in the browser. buildInput now emits both shapes.
+- Pause was a boolean flag (ui.paused) that never became a screen, so Esc
+  never showed the pause screen and the playtest timed out. Pause is now a
+  screen state: Esc or P pauses, Enter or Esc resumes, R restarts, Q saves
+  and quits, and the HUD resume button clears the flag too.
+- The weapon wheel showed the wrong names: the HUD upper-cased the weapon
+  ids, so SMG came out as "Smg". The wheel now uses the canonical names
+  (Fists, Pistol, SMG, Shotgun, Rifle).
+- The dispatch panel read u.call / u.role / u.dist, but the game builds
+  dispatch entries as { name, distM, status }; the panel now reads the
+  real fields and converts the distance to metres.
+- The vehicle condition bar read car.hp / car.maxHp, but the game uses
+  car.health / car.maxHealth; it now reads the real fields.
+- The garage purchase in the HUD set maxSpeed / maxHp, which the game
+  never reads; it now also sets the game's top / maxHealth / health.
+- The minimap canvas filled the whole screen: index.html had a blanket
+  canvas { width: 100vw; height: 100vh } rule that stretched the 190 by
+  142 minimap over the game. The rule is now scoped to the game canvas
+  only.
+- The 3D world did not render at all — only the sky gradient showed. The
+  cause: the draw functions set uniforms through U.m, U.nm, U.tex,
+  U.tint, U.em, U.inst and U.icol, but the uniform table is keyed by the
+  full names (u_m, u_nm, u_tex, u_tint, u_em, u_inst, u_icol), so every
+  one of those lookups was undefined and the calls were silently ignored;
+  the model matrix stayed all zeros, which clips every vertex. The draw
+  functions now use the full uniform names. Verified by reading the
+  uniform back from the live context: u_m is a real translation matrix.
+- The camera was far too close and low (14 back, 5 up), so the ground
+  filled the frame and the car was out of view; it is now 120 back and 35
+  up while driving (75 back, 28 up on foot), with the target further ahead.
+- The camera used a stale heading: the renderer's heading helper preferred
+  a field named a, which the shot staging set once and never updated, over
+  the angle the game actually moves with, so the drive shot's camera ended
+  up inside a building facing a wall. The helper now prefers angle, and
+  the shot staging sets angle.
+- The glTF cars floated 11 units above the road: the draw lifted them by
+  11, but the models' base is already at y 0. The lift is now 0.
+- The on-foot shot staged the player facing a building wall and the camera
+  so close the player's head was cut off; the shot now stages the player
+  at an intersection facing down the road, and the on-foot camera is
+  further back and higher.
 
-What is NOT verified: the later missions (4–7) were verified only by the
-mission state machine and the headless test, not by playing them end to end
-in the browser; the taxi fare loop was not played through in the browser
-either; pistol combat was not played through in the browser; busted/wasted
-respawn was verified by reading the logic, not by playing to death. Sound
-was not listened to — the WebAudio code runs without errors in headless
-Chromium, but no human ear has checked the mix. Headless SwiftShader renders
-at low FPS, so live play runs in slow motion there; on real desktop Chrome it
-runs at full speed, and shot mode is unaffected.
-
-No submission yet: the user must see and approve the new screenshots first;
-the parent agent submits only after that approval.
-
-### Polish and finish — 19 November 2026
-
-The user judged the 3D version not good enough against the leaderboard
-leaders, so it was polished with new game-dev skills and Blender, then
-finished across two VM restarts that killed two recordings (01a1f124 sealed,
-01a1f176 dead). The six changed source files were re-authored fresh in a
-third recorded session (01a1f189) from this design document and the polish
-and finish status files, never copied from the unwitnessed drafts.
-
-Polish changes: three.js r160 to r187 (vendored module plus core files, and
-the r187 glTF loader with its utils); every material became PBR standard
-with roughness and metalness; a sunset sky dome and a baked PMREM
-environment map at intensity 0.4; sun 2.6, hemisphere 0.7, fog far 2400;
-about 40 percent of windows glow warm orange at dusk; field-of-view kick
-from 62 degrees cruising to about 68 at top speed; trauma-squared
-summed-sine screen shake with a slight roll; drift dust at the rear wheels;
-instanced buildings (one mesh per wall colour plus one for roofs),
-containers, trees, lamps and props; nine landmark signs; street props
-(umbrellas, benches, bus-stop shelters, four billboards reading SOLMAR BAY,
-CASINO, CHOP SHOP and PORTSIDE); HUD fixes (title says seven jobs, brighter
-minimap roads, nine orange landmark dots, white player arrow over a dark
-outline, edge arrow with distance in metres); car handling tuned (sedan
-acceleration 420, grip 8; sport 560, 9.5). Five original 3D models were
-built in Blender (sportscar, sedan, police car, Grand Solmar Hotel, palm
-tree), exported as glTF, validated clean, and integrated with procedural
-fallbacks (sport uses the sportscar, sedan/taxi/classic the sedan, police
-the police car; truck and van keep procedural meshes; the hotel model sits
-at the nudged centre 2400, 1354). One measured deviation from the design:
-the models are built at about half game scale, so car clones are scaled
-times two and palms times three to match the world; unscaled, the cars
-would render half-size.
-
-Finish verification: a headless logic test, 63 of 63 checks pass; a full
-scripted browser playtest, 27 of 27 checks pass with zero console and zero
-page errors (walk, drive, steal, three-star police with helicopter, mission
-1 pickup and dropoff for $150, pistol combat, pause and resume, all four
-shot URLs reaching the ready flag); four new staged screenshots (1280 by
-800 JPEGs, 81–101 KiB each), read back as images. One cosmetic bug found
-by reading the new shots and fixed: the health bar rendered red at full
-health; it is now green above 50 percent, orange to 25, red below. Gate
-check on the final commit: dossier.json 670,330 bytes (limit 1.5 MiB),
-dossier text 158,609 bytes (limit 160 KiB — close, only about 5 KiB of
-headroom, so do not add source without re-checking), game/ 2,616,381 bytes
-in 27 entries (limit 48 MiB, 993 entries), index.html 652 bytes, no runtime
-network references in the game's own source (only documentation URLs inside
-the vendored three.js comments).
-
-Still not verified: missions 4–7 and the taxi loop were checked only by the
-logic test, not played end to end in the browser; sound was not listened
-to; headless SwiftShader runs at about 1.7 frames per second, so live play
-is in slow motion there (real desktop Chrome runs at full speed); lit
-windows vary per wall-colour and window variant, not uniquely per building;
-draw calls are 271 while driving, higher than the polish session's 216,
-mostly from per-car and prop meshes.
-
-### Rebuild v2 — 19 November 2026
-
-The user sent a screenshot of a new leaderboard entry, GOLDEN HOUR KINGS
-(Puerto Celeste: 8 story missions, 5-star PCPD dispatch, helicopter and
-roadblocks, weapon wheel, carjacking, garage upgrades, respect, saves,
-radio) and asked whether Solmar Bay could look like that. It could, so the
-game was rebuilt toward that look and those systems, keeping the Solmar Bay
-name and identity (not the other entrant's city name or text). The rebuild
-ran in a fourth recorded session (01a1f309, sealed), by three parallel
-workers (look, systems/HUD) under the coordinator, and was finished in a
-fifth recorded session (01a1f33e) that fixed the one open issue below.
-
-Rebuild changes: golden-hour lighting; a denser city; five new Blender
-models (tall apartment with balconies 149,236 B, mid apartment 50,732 B,
-fuller palm 44,396 B, police helicopter 38,012 B, yellow taxi van 20,760 B;
-303,136 B total, 10 models in all); weapon wheel with five weapons (fists,
-pistol, SMG $800, shotgun $1,500, rifle $3,000, locked until respect 400);
-respect (0 at start, +100 per mission, +15 per fare, level = points / 200);
-garage at the Chop Shop (Repair $100, Respray $250, Engine $800 per level
-up to 2, Armour $1,200 per level up to 2); dispatch panel (callsigns
-GULL-11, CORAL-25, REEF-18, TAC-45, AIR-1; statuses RAMMING / FIRING /
-SPOTLIGHT / ROADBLOCK / PATROL); dialogue with CSS portraits (crew: Mara
-the boss, Diz the wheelman, Rook the player); vehicle condition bar and
-radio now-playing in the HUD; five-star wanted with roadblocks (up to 2 at
-4–5 stars); mission 8 "Golden Hour" ($2,000: meet the crew at Marina
-Casino, survive a scripted 5-star manhunt until wanted returns to 0,
-deliver to the Hideout); mission stage tracker (stage fraction, next-step
-label, IN SIGHT indicator by distance rule, not raycasting).
-
-The one must-fix issue, found after the rebuild: the player car was NOT
-visible in the driving screenshots — empty road where the car should be,
-though the speed readout said the player was driving. A probe had reported
-the car projecting to screen (640, 470) and marked it visible, but crops of
-the disk screenshots at that exact region showed empty road. The cause:
-`buildCity` in `game/src/render3d.js` ran `loadAll().then(() => {
-applyModels(); window.__solmarModelsReady = true; ... })`, and
-`applyModels()` clears ALL car meshes from `carMeshes` and the scene. When
-the GLB models finish loading asynchronously — after the shot-mode syncs in
-main.js — that callback fires, the car meshes are cleared, and nothing
-recreates them, because shot mode has no frame loop (no more `sync` calls).
-Live play was unaffected (the frame loop re-syncs every frame); the
-helicopter mesh was cleared the same way. The fix is one line in the same
-callback: call `sync(game, 1 / 60)` after `applyModels()` instead of only
-rendering — `sync` calls `applyModels()` at its top, then the car loop
-recreates the car meshes, then it renders. Robust across all GLB-load
-timings. Verified in pixels: the re-taken cover shows the red sportscar at
-centre with the helicopter in the distance and police ahead; drive shows
-the blue sedan; mission shows the red sportscar under the waypoint beam.
-
-Also added in the finish session: a held gun mesh. No gun mesh existed in
-the renderer at all before. It is one small procedural group (body, barrel,
-grip, gunmetal, long axis on local +X — the same forward axis bullets use),
-shown only when the player is on foot with a gun equipped, positioned at
-the player's right hand with the walk bob, and scaled per weapon (pistol
-1, SMG 1.3, shotgun 1.55, rifle 1.85). The on-foot screenshot stages the
-pistol so the gun shows in the frame.
-
-Finish verification: headless logic test 121 of 121 pass; full scripted
-browser playtest 43 of 43 pass with zero console and zero page errors
-(walk, drive, steal, wanted with helicopter and roadblocks, missions
-including the 8th, weapon switch, garage purchase, respect gain,
-pause/resume, save/load, all four shot URLs reaching the ready flag); four
-new staged screenshots (1280 by 800 JPEGs, 111–139 KiB each), read back as
-images. Gate check on the final state: dossier.json 809,878 bytes (limit
-1.5 MiB), dossier text 148,431 bytes (limit 160 KiB — 15,409 bytes of
-headroom), game/ 2,909,343 bytes in 31 entries (limit 48 MiB, 993
-entries), index.html 652 bytes, no runtime network references in game/.
-
-Still not verified: missions 3–7 and the taxi fare loop were checked only
+What is NOT verified: missions 3–7 and the taxi fare loop were checked only
 by the logic test, not played end to end in the browser (missions 1, 2 and
-8 were browser-played); sound was not listened to; headless SwiftShader
-runs at about 0.7–1.7 frames per second, so live play is in slow motion
-there (real desktop Chrome runs at full speed); IN SIGHT is a distance
-rule, not line-of-sight raycasting; dialogue portraits are CSS circles with
+8 were browser-played); sound was not listened to — the WebAudio code runs
+without errors in headless Chromium, but no human ear has checked the mix;
+headless SwiftShader renders at about 2.7 frames per second with the full
+3D scene, so live play is in slow motion there (real desktop Chrome runs at
+full speed, and shot mode is unaffected); IN SIGHT is a distance rule, not
+line-of-sight raycasting; dialogue portraits are CSS circles with
 initials, not drawn faces; lit windows vary per wall-colour and window
-variant, not uniquely per building.
+variant, not uniquely per building; the building window texture repeats
+visibly on large facades.
 
 No submission yet: the user must see and approve the new screenshots first;
 the parent agent submits only after that approval.
